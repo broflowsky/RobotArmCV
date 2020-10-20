@@ -36,6 +36,7 @@ class WebcamStream:
     def stop(self):
         self.stopped = True
         
+        
 
         
 #######################################
@@ -80,15 +81,16 @@ camStream.start()
 while True:
     img = camStream.read()
     decodedObjects = decode(img)
-#    display(img,decodedObjects)
-#    
-#    cv2.imshow('QRDetector Detector zbar', img)
-#    c = cv2.waitKey(1) % 0x100
-#    if c == 27:#press ESC
-#        break
-#    
+    display(img,decodedObjects)
+    
+    cv2.imshow('QRDetector Detector zbar', img)
+    c = cv2.waitKey(1) % 0x100
+    if c == 27:#press ESC
+        break
+    
 
-cap.release()#close camera
+camStream.stop()
+
 cv2.destroyAllWindows()
             
             
