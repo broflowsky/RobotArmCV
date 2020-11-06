@@ -9,12 +9,19 @@ from threading import Thread
 import cv2
 
 
+#Variables
+WEBCAM_RES_X = 480
+WEBCAM_RES_y = 640
+BWF_TOL = 150
+
+
+#cv2.VideoCapture runs on its own thread
 class WebcamStream:
     def __init__(self,src =0):
         #init cv stream
         self.stream =cv2.VideoCapture(src)
-        self.stream.set(3,640)
-        self.stream.set(4,480)
+        self.stream.set(3,WEBCAM_RES_y)
+        self.stream.set(4,WEBCAM_RES_X)
         self.stopped = False
         
         #read first frame from the stream
@@ -34,15 +41,18 @@ class WebcamStream:
         return self.img
     
     def stop(self):
+        print('releasing the camera')
+        self.stream.stream.release()
         self.stopped = True
+    
+    def __del__(self):
+        print('releasing the camera')
+        self.stream.stream.release()
         
 
         
 #######################################
 def decode(im):
-#    mask = cv2.inRange(im,(0,0,0),(200,200,200))
-#    thresholded = cv2.cvtColor(mask,cv2.COLOR_GRAY2BGR)
-#    inverted = 255-thresholded # black-in-white
     decodedObjects = pyzbar.decode(im)
     count = 0
     for obj in decodedObjects:
@@ -54,8 +64,10 @@ def decode(im):
     return decodedObjects
 #######################################
 
+
 #############################################################
-def display(im, decodedObjects):
+def draw_box(im, decodedObjects,):
+     
     for obj in decodedObjects:
         points = obj.polygon
         if len(points) > 4:
@@ -71,26 +83,35 @@ def display(im, decodedObjects):
             cv2.line(im, hull[j], hull[(j+1)%n], (0,255,0),3)
 ##############################################################
         
+def main():        
+    camStream = WebcamStream()
+    counter =0
+    print(" QRCode detector pyzbar multithreaded ")
+    camStream.start()
+    while True:
+        img = camStream.read()
         
-camStream = WebcamStream()
+        mask = cv2.inRange(img,(0,0,0),( BWF_TOL, BWF_TOL, BWF_TOL))
+        thresholded = cv2.cvtColor(mask,cv2.COLOR_GRAY2BGR)
+        bw_img = 255-thresholded # black-in-white
         
-counter =0
-print(" QRCode detector v1.0 ")
-camStream.start()
-while True:
-    img = camStream.read()
-    decodedObjects = decode(img)
-#    display(img,decodedObjects)
-#    
-#    cv2.imshow('QRDetector Detector zbar', img)
-#    c = cv2.waitKey(1) % 0x100
-#    if c == 27:#press ESC
-#        break
-#    
+#        decodedObjects = decode(img)
+        decodedBW = decode(bw_img)
+        
+#        draw_box(img,decodedObjects)
+        draw_box(bw_img, decodedBW)
+        
+        cv2.imshow('QRDetector Detector zbar', img)
+        cv2.imshow('QRDetector Detector zbar bw', bw_img)
+        c = cv2.waitKey(1) % 0x100
+        if c == 27:#press ESC
+            break
+        
 
-cap.release()#close camera
-cv2.destroyAllWindows()
-            
-            
-            
+    #cap.release()#close camera
+    del camStream
+    cv2.destroyAllWindows()
+    print('exiting program')
+
+main()
     
