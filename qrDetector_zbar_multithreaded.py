@@ -115,9 +115,3 @@ def main():
     print('exiting program')
 
 main()
-
-            
-            
-            
->>>>>>> b3c6e08c20ea41fa6c0f2cee967fe840988752b2
-    
