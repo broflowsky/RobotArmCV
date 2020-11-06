@@ -9,10 +9,9 @@ from threading import Thread
 import cv2
 
 
+##only can be used on rasberypi
+#import RPi.GPIO as GPIO
 
-##want to output the location of the code 
-##and the arm distance
-##average all the points in an object
 
 
 class WebcamStream:
@@ -46,22 +45,17 @@ class WebcamStream:
 
  
 def decode(im):
-#    mask = cv2.inRange(im,(0,0,0),(200,200,200))
-#    thresholded = cv2.cvtColor(mask,cv2.COLOR_GRAY2BGR)
-#    inverted = 255-thresholded # black-in-white
     decodedObjects = pyzbar.decode(im)
     count = 0
     for obj in decodedObjects:
-#        print('Type : ',obj.type)
-#        print('Data : ', obj.data,'\n')
         count +=1
-    if count != 0:        print('Qr code found : ', count)
-    return decodedObjects
+    if count != 0:  
+     return decodedObjects
 
 
 
 
-##knowing how big the physical QR code is we can find the distance to it by doing the ratio of what we sees
+##knowing how big the physical QR code is we can find the distance to it by doing the ratio of what we see
 def findMidPoint(points):
     
     middleX = 0;
@@ -90,9 +84,8 @@ def findOffset(im, decodedObjects):
         xOffset = middle[0] - centerX
         yOffset = middle[1] - centerY
         print(xOffset,yOffset)
+    ##return xOffset,yOffset
       
-
-
 
 
 
@@ -114,9 +107,20 @@ def display(im, decodedObjects):
             cv2.line(im, hull[j], hull[(j+1)%n], (0,255,0),3)
 
 
+# def rotateplatform(xOffset):
+#     print("rotateplatform")
 
 
+# ##either relay the information to a microcontroller or do it ourselves
+# def moveArmVertical():
+#     print("moving arm vertically")
 
+# def moveArmHorizontal():
+#     print("moving arm horizontally")
+
+
+# def movementHandler():
+#     print("handling movements in thread")
 
 
 
@@ -130,8 +134,7 @@ while True:
     img = camStream.read()
     decodedObjects = decode(img)
 
-
-    findOffset(img,decodedObjects);
+    findOffset(img,decodedObjects)
 
     #we wouldnt need to display though we just need to get the values
     #less processing power
@@ -145,7 +148,7 @@ while True:
 
 camStream.stop()
 
-cv2.destroyAllWindows()
+#cv2.destroyAllWindows()
             
             
             
