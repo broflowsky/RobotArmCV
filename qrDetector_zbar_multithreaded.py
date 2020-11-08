@@ -10,8 +10,17 @@ import cv2
 
 
 ##only can be used on rasberypi
-#import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO
+import time;
 
+GPIO.setmode(GPIO.BOARD)
+
+
+GPIO.setup(12,GPIO.OUT)
+pwm = GPIO.PWM(12,100) #initalize pwm to 100hz
+
+dc = 0;
+pwm.start(dc)
 
 
 class WebcamStream:
@@ -73,6 +82,7 @@ def findMidPoint(points):
 
 
 def findOffset(im, decodedObjects):
+  if(decodedObjects is not None):
     for obj in decodedObjects:
         points = obj.polygon
         middle = findMidPoint(points)
@@ -84,13 +94,14 @@ def findOffset(im, decodedObjects):
         xOffset = middle[0] - centerX
         yOffset = middle[1] - centerY
         print(xOffset,yOffset)
-    ##return xOffset,yOffset
+    return xOffset,yOffset
       
 
 
 
 
 def display(im, decodedObjects):
+ if(decodedObjects is not None):
     for obj in decodedObjects:
         points = obj.polygon
         findMidPoint(points)
@@ -128,27 +139,42 @@ def display(im, decodedObjects):
 camStream = WebcamStream()
         
 counter =0
+found = 0;
 print(" QRCode detector v1.0 ")
 camStream.start()
 while True:
     img = camStream.read()
     decodedObjects = decode(img)
 
-    findOffset(img,decodedObjects)
+    offsets =  findOffset(img,decodedObjects)
+
+    if(offsets is not None):
+   	 if(offsets[0] <100 and offsets[0] > -100):
+      	  found = 1
+
+    if(found ==0):
+         pwm.ChangeDutyCycle(30)
+         time.sleep(0.05)
+         pwm.ChangeDutyCycle(0)
+         time.sleep(0.1)
+    else:
+     pwm.ChangeDutyCycle(0)
+
 
     #we wouldnt need to display though we just need to get the values
     #less processing power
-   ##display(img,decodedObjects)
+    display(img,decodedObjects)
     
-    ##..cv2.imshow('QRDetector Detector zbar', img)
-    ##..c = cv2.waitKey(1) % 0x100
-    ##if c == 27:#press ESC
-    ##    break
+    cv2.imshow('QRDetector Detector zbar', img)
+    c = cv2.waitKey(1) % 0x100
+    if c == 27:#press ESC
+        break
     
 
 camStream.stop()
-
-#cv2.destroyAllWindows()
+pwm.stop()
+GPIO.cleanup()
+cv2.destroyAllWindows()
             
             
             
